@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company Dashboard - Reverse Hiring Platform</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/font/bootstrap-icons.css">
+    <style>
+        .candidate-card {
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+        .candidate-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .tech-rank-badge {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6e8efb, #a777e3);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .skill-badge {
+            background-color: #f0f7ff;
+            color: #3b82f6;
+            border: 1px solid #dbeafe;
+            font-size: 0.8rem;
+        }
+        .dashboard-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+        .nav-pills .nav-link.active {
+            background-color: #6e8efb;
+        }
+        .application-status-pending {
+            color: #f59e0b;
+        }
+        .application-status-accepted {
+            color: #10b981;
+        }
+        .application-status-rejected {
+            color: #ef4444;
+        }
+        .application-status-negotiating {
+            color: #8b5cf6;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">Reverse Hiring Platform</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/dashboard">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/company/profile">Company Profile</a>
+                    </li>
+                </ul>
+                <div class="d-flex">
+                    <a href="/logout" class="btn btn-outline-light">Logout</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-header">
+        <div class="container">
+            <h1>Welcome, {{ current_user.name }}</h1>
+            <p>Find and connect with top tech talent based on their verified skills.</p>
+        </div>
+    </div>
+
+    <div class="container mb-5">
+        <ul class="nav nav-pills mb-4" id="dashboardTabs">
+            <li class="nav-item">
+                <a class="nav-link active" data-bs-toggle="pill" href="#topCandidates">Top Candidates</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="pill" href="#myApplications">My Applications</a>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+            <!-- Top Candidates Tab -->
+            <div class="tab-pane fade show active" id="topCandidates">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>Top Candidates</h2>
+                    <div class="d-flex gap-2">
+                        <div class="input-group">
+                            <input type="text" id="candidateSearch" class="form-control" placeholder="Search candidates...">
+                            <button class="btn btn-outline-secondary" type="button">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </div>
+                        <select class="form-select" id="skillFilter" style="max-width: 200px;">
+                            <option value="">All Skills</option>
+                            <option value="python">Python</option>
+                            <option value="javascript">JavaScript</option>
+                            <option value="java">Java</option>
+                            <option value="react">React</option>
+                            <option value="node">Node.js</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row" id="candidatesContainer">
+                    <!-- Candidate 1 -->
+                    <div class="col-md-6 col-lg-4 mb-4 candidate-item" data-skills="python,javascript,react,node.js">
+                        <div class="card candidate-card position-relative">
+                            <div class="tech-rank-badge">85</div>
+                            <div class="card-body">
+                                <h5 class="card-title">John Doe</h5>
+                                <div class="mb-3">
+                                    <span class="badge skill-badge me-1">Python</span>
+                                    <span class="badge skill-badge me-1">JavaScript</span>
+                                    <span class="badge skill-badge me-1">React</span>
+                                    <span class="badge bg-light text-dark">+1 more</span>
+                                </div>
+                                <button class="btn btn-primary w-100" onclick="openApplyModal('67df0b8f7076be832a368343', 'John Doe')">
+                                    Apply to This Candidate
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <!-- Candidate 2 -->
+                    <div class="col-md-6 col-lg-4 mb-4 candidate-item" data-skills="java,spring,hibernate,sql">
+                        <div class="card candidate-card position-relative">
+                            <div class="tech-rank-badge">78</div>
+                            <div class="card-body">
+                                <h5 class="card-title">Jane Smith</h5>
+                                <div class="mb-3">
+                                    <span class="badge skill-badge me-1">Java</span>
+                                    <span class="badge skill-badge me-1">Spring</span>
+                                    <span class="badge skill-badge me-1">Hibernate</span>
+                                    <span class="badge bg-light text-dark">+1 more</span>
+                                </div>
+                                <button class="btn btn-primary w-100" onclick="openApplyModal('67df0b8f7076be832a368344', 'Jane Smith')">
+                                    Apply to This Candidate
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <!-- Candidate 3 -->
+                    <div class="col-md-6 col-lg-4 mb-4 candidate-item" data-skills="c,c++,linux,embedded">
+                        <div class="card candidate-card position-relative">
+                            <div class="tech-rank-badge">92</div>
+                            <div class="card-body">
+                                <h5 class="card-title">Alice Johnson</h5>
+                                <div class="mb-3">
+                                    <span class="badge skill-badge me-1">C</span>
+                                    <span class="badge skill-badge me-1">C++</span>
+                                    <span class="badge skill-badge me-1">Linux</span>
+                                    <span class="badge bg-light text-dark">+1 more</span>
+                                </div>
+                                <button class="btn btn-primary w-100" onclick="openApplyModal('67df0b8f7076be832a368345', 'Alice Johnson')">
+                                    Apply to This Candidate
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <!-- Candidate 4 -->
+                    <div class="col-md-6 col-lg-4 mb-4 candidate-item" data-skills="python,django,postgresql,aws">
+                        <div class="card candidate-card position-relative">
+                            <div class="tech-rank-badge">88</div>
+                            <div class="card-body">
+                                <h5 class="card-title">Bob Brown</h5>
+                                <div class="mb-3">
+                                    <span class="badge skill-badge me-1">Python</span>
+                                    <span class="badge skill-badge me-1">Django</span>
+                                    <span class="badge skill-badge me-1">PostgreSQL</span>
+                                    <span class="badge bg-light text-dark">+1 more</span>
+                                </div>
+                                <button class="btn btn-primary w-100" onclick="openApplyModal('67df0b8f7076be832a368346', 'Bob Brown')">
+                                    Apply to This Candidate
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- My Applications Tab -->
+            <div class="tab-pane fade" id="myApplications">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>My Applications</h2>
+                    <select class="form-select" id="applicationStatusFilter" style="max-width: 200px;">
+                        <option value="">All Statuses</option>
+                        <option value="pending">Pending</option>
+                        <option value="accepted">Accepted</option>
+                        <option value="rejected">Rejected</option>
+                        <option value="negotiating">Negotiating</option>
+                    </select>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Candidate</th>
+                                <th>Job Title</th>
+                                <th>Date Applied</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="applicationsTableBody">
+                            <!-- Applications will be loaded here dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col-12 text-center py-5" id="loadingApplications" style="display: none;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Loading applications...</p>
+                </div>
+                <div class="col-12 text-center py-5" id="noApplications" style="display: none;">
+                    <i class="bi bi-inbox-fill" style="font-size: 3rem; color: #ccc;"></i>
+                    <p class="mt-2">You haven't sent any applications yet.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for sending application -->
+    <div class="modal fade" id="applyModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Apply to Candidate</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="applyForm">
+                        <input type="hidden" id="candidateId" name="candidateId">
+                        <div class="mb-3">
+                            <label for="jobTitle" class="form-label">Job Title</label>
+                            <input type="text" class="form-control" id="jobTitle" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="salary" class="form-label">Salary Range</label>
+                            <input type="text" class="form-control" id="salary" placeholder="e.g. $80,000 - $100,000">
+                        </div>
+                        <div class="mb-3">
+                            <label for="workArrangement" class="form-label">Work Arrangement</label>
+                            <select class="form-select" id="workArrangement">
+                                <option value="Remote">Remote</option>
+                                <option value="Hybrid">Hybrid</option>
+                                <option value="On-site">On-site</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Benefits</label>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input benefit-check" type="checkbox" value="Health Insurance" id="healthInsurance">
+                                        <label class="form-check-label" for="healthInsurance">
+                                            Health Insurance
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input benefit-check" type="checkbox" value="401(k)" id="retirement">
+                                        <label class="form-check-label" for="retirement">
+                                            401(k)
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input benefit-check" type="checkbox" value="Flexible Hours" id="flexHours">
+                                        <label class="form-check-label" for="flexHours">
+                                            Flexible Hours
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input benefit-check" type="checkbox" value="Unlimited PTO" id="unlimitedPTO">
+                                        <label class="form-check-label" for="unlimitedPTO">
+                                            Unlimited PTO
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input benefit-check" type="checkbox" value="Professional Development" id="profDev">
+                                        <label class="form-check-label" for="profDev">
+                                            Professional Development
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input benefit-check" type="checkbox" value="Home Office Stipend" id="homeOffice">
+                                        <label class="form-check-label" for="homeOffice">
+                                            Home Office Stipend
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="message" class="form-label">Message to Candidate</label>
+                            <textarea class="form-control" id="message" rows="4" required placeholder="Introduce your company and role..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="submitApplication">Send Application</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for viewing application details -->
+    <div class="modal fade" id="applicationDetailModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Application Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="applicationDetailContent">
+                    <!-- Application details will be loaded here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load top candidates when page loads
+            loadTopCandidates();
+            
+            // Set up tab change event listener
+            document.querySelectorAll('#dashboardTabs .nav-link').forEach(tab => {
+                tab.addEventListener('click', function(e) {
+                    if (this.getAttribute('href') === '#myApplications') {
+                        loadApplications();
+                    }
+                });
+            });
+            
+            // Set up search and filter functionality
+            document.getElementById('candidateSearch').addEventListener('input', filterCandidates);
+            document.getElementById('skillFilter').addEventListener('change', filterCandidates);
+            document.getElementById('applicationStatusFilter').addEventListener('change', filterApplications);
+            
+            // Set up application submission
+            document.getElementById('submitApplication').addEventListener('click', submitApplication);
+        });
+        function openApplyModal(candidateId, candidateName) {
+            document.getElementById('candidateId').value = candidateId;
+            document.querySelector('#applyModal .modal-title').textContent = `Apply to ${candidateName}`;
+            
+            // Reset form
+            document.getElementById('applyForm').reset();
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('applyModal'));
+            modal.show();
+        }
+        function submitApplication() {
+            const candidateId = document.getElementById('candidateId').value;
+            const jobTitle = document.getElementById('jobTitle').value;
+            const salary = document.getElementById('salary').value;
+            const workArrangement = document.getElementById('workArrangement').value;
+            const message = document.getElementById('message').value;
+            
+            // Get selected benefits
+            const benefits = [];
+            document.querySelectorAll('.benefit-check:checked').forEach(checkbox => {
+                benefits.push(checkbox.value);
+            });
+            
+            // Validate form
+            if (!jobTitle || !message) {
+                alert('Please fill out all required fields.');
+                return;
+            }
+            
+            // Create job details object
+            const jobDetails = {
+                title: jobTitle,
+                salary: salary,
+                benefits: benefits,
+                work_arrangement: workArrangement,
+                message: message
+            };
+            
+            // Send application
+            fetch('/apply_to_candidate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    candidate_id: candidateId,
+                    job_details: jobDetails
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Close modal (alternative approach)
+                    const applyModalElement = document.getElementById('applyModal');
+                    const applyModal = new bootstrap.Modal(applyModalElement);  // Create a new modal instance
+                    applyModal.hide();  // Close the modal
+                    
+                    // Show success message
+                    alert('Application sent successfully!');
+                    
+                    // Switch to applications tab and refresh
+                    document.querySelector('#dashboardTabs .nav-link[href="#myApplications"]').click();
+                } else {
+                    alert('Error: ' + (data.error || 'Failed to send application'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            });
+        }
+        function loadTopCandidates() {
+            document.getElementById('loadingCandidates').style.display = 'block';
+            
+            fetch('/top_candidates')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('loadingCandidates').style.display = 'none';
+                    const container = document.getElementById('candidatesContainer');
+                    
+                    if (data.length === 0) {
+                        container.innerHTML = `
+                            <div class="col-12 text-center py-5">
+                                <p>No candidates available yet. Check back later!</p>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    let candidatesHTML = '';
+                    
+                    data.forEach(candidate => {
+                        const skills = [...(candidate.skills || [])];
+                        if (candidate.resume_analysis && candidate.resume_analysis.skills) {
+                            candidate.resume_analysis.skills.forEach(skill => {
+                                if (!skills.includes(skill)) {
+                                    skills.push(skill);
+                                }
+                            });
+                        }
+                        
+                        const skillsHTML = skills.slice(0, 5).map(skill => 
+                            `<span class="badge skill-badge me-1">${skill}</span>`
+                        ).join('');
+                        
+                        candidatesHTML += `
+                            <div class="col-md-6 col-lg-4 mb-4 candidate-item" 
+                                 data-skills="${skills.join(',').toLowerCase()}">
+                                <div class="card candidate-card position-relative">
+                                    <div class="tech-rank-badge">${candidate.tech_rank}</div>
+                                    <div class="card-body">
+                                        <h5 class="card-title">${candidate.name}</h5>
+                                        <div class="mb-3">
+                                            ${skillsHTML}
+                                            ${skills.length > 5 ? `<span class="badge bg-light text-dark">+${skills.length - 5} more</span>` : ''}
+                                        </div>
+                                        <button class="btn btn-primary w-100" 
+                                                onclick="openApplyModal('${candidate._id}', '${candidate.name}')">
+                                            Apply to This Candidate
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    container.innerHTML = candidatesHTML;
+                })
+                .catch(error => {
+                    console.error('Error loading candidates:', error);
+                    document.getElementById('loadingCandidates').style.display = 'none';
+                    document.getElementById('candidatesContainer').innerHTML = `
+                        <div class="col-12 text-center py-5">
+                            <p class="text-danger">Error loading candidates. Please try again later.</p>
+                        </div>
+                    `;
+                });
+        }
+        
+        function loadApplications() {
+            document.getElementById('loadingApplications').style.display = 'block';
+            document.getElementById('noApplications').style.display = 'none';
+            
+            fetch('/my_applications')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('loadingApplications').style.display = 'none';
+                    const tableBody = document.getElementById('applicationsTableBody');
+                    
+                    if (data.length === 0) {
+                        document.getElementById('noApplications').style.display = 'block';
+                        tableBody.innerHTML = '';
+                        return;
+                    }
+                    
+                    let applicationsHTML = '';
+                    
+                    data.forEach(app => {
+                        const statusClass = `application-status-${app.status.toLowerCase()}`;
+                        const date = new Date(app.created_at.$date || app.created_at);
+                        const formattedDate = date.toLocaleDateString();
+                        
+                        applicationsHTML += `
+                            <tr data-status="${app.status.toLowerCase()}" class="application-row">
+                                <td>${app.candidate_name || 'Candidate'}</td>
+                                <td>${app.job_title}</td>
+                                <td>${formattedDate}</td>
+                                <td><span class="badge ${statusClass}">${app.status}</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" 
+                                            onclick="viewApplicationDetails('${app._id}')">
+                                        View Details
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    
+                    tableBody.innerHTML = applicationsHTML;
+                })
+                .catch(error => {
+                    console.error('Error loading applications:', error);
+                    document.getElementById('loadingApplications').style.display = 'none';
+                    document.getElementById('applicationsTableBody').innerHTML = `
+                        <tr>
+                            <td colspan="5" class="text-center text-danger">
+                                Error loading applications. Please try again later.
+                            </td>
+                        </tr>
+                    `;
+                });
+        }
+        
+        function filterCandidates() {
+            const searchTerm = document.getElementById('candidateSearch').value.toLowerCase();
+            const skillFilter = document.getElementById('skillFilter').value.toLowerCase();
+            
+            document.querySelectorAll('.candidate-item').forEach(item => {
+                const skills = (item.dataset.skills || '').toLowerCase();
+                const cardText = item.textContent.toLowerCase();
+                
+                const matchesSearch = searchTerm === '' || cardText.includes(searchTerm);
+                const matchesSkill = skillFilter === '' || skills.includes(skillFilter);
+                
+                item.style.display = matchesSearch && matchesSkill ? 'block' : 'none';
+            });
+        }
+        
+        function filterApplications() {
+            const statusFilter = document.getElementById('applicationStatusFilter').value.toLowerCase();
+            
+            document.querySelectorAll('.application-row').forEach(row => {
+                const status = row.dataset.status;
+                row.style.display = statusFilter === '' || status === statusFilter ? 'table-row' : 'none';
+            });
+        }
+        
+        function openApplyModal(candidateId, candidateName) {
+            document.getElementById('candidateId').value = candidateId;
+            document.querySelector('#applyModal .modal-title').textContent = `Apply to ${candidateName}`;
+            
+            // Reset form
+            document.getElementById('applyForm').reset();
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('applyModal'));
+            modal.show();
+        }
+        
+        function submitApplication() {
+            const candidateId = document.getElementById('candidateId').value;
+            const jobTitle = document.getElementById('jobTitle').value;
+            const salary = document.getElementById('salary').value;
+            const workArrangement = document.getElementById('workArrangement').value;
+            const message = document.getElementById('message').value;
+            
+            // Get selected benefits
+            const benefits = [];
+            document.querySelectorAll('.benefit-check:checked').forEach(checkbox => {
+                benefits.push(checkbox.value);
+            });
+            
+            // Validate form
+            if (!jobTitle || !message) {
+                alert('Please fill out all required fields.');
+                return;
+            }
+            
+            // Create job details object
+            const jobDetails = {
+                title: jobTitle,
+                salary: salary,
+                benefits: benefits,
+                work_arrangement: workArrangement,
+                message: message
+            };
+            
+            // Send application
+            fetch('/apply_to_candidate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    candidate_id: candidateId,
+                    job_details: jobDetails
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Close modal
+                    bootstrap.Modal.getInstance(document.getElementById('applyModal')).hide();
+                    
+                    // Show success message
+                    alert('Application sent successfully!');
+                    
+                    // Switch to applications tab and refresh
+                    document.querySelector('#dashboardTabs .nav-link[href="#myApplications"]').click();
+                } else {
+                    alert('Error: ' + (data.error || 'Failed to send application'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            });
+        }
+        
+        function viewApplicationDetails(applicationId) {
+            fetch(`/application/${applicationId}`)
+                .then(response => response.json())
+                .then(app => {
+                    const date = new Date(app.created_at.$date || app.created_at);
+                    const formattedDate = date.toLocaleDateString();
+                    
+                    let respondedDate = '';
+                    if (app.responded_at) {
+                        const respDate = new Date(app.responded_at.$date || app.responded_at);
+                        respondedDate = respDate.toLocaleDateString();
+                    }
+                    
+                    const benefitsList = app.benefits && app.benefits.length > 0 
+                        ? app.benefits.map(b => `<li>${b}</li>`).join('') 
+                        : '<li>None specified</li>';
+                    
+                    let responseHTML = '';
+                    if (app.status !== 'pending') {
+                        responseHTML = `
+                            <div class="card mb-3">
+                                <div class="card-header">Candidate Response (${respondedDate})</div>
+                                <div class="card-body">
+                                    <p>${app.candidate_response || 'No message provided'}</p>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    document.getElementById('applicationDetailContent').innerHTML = `
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <h6>Candidate</h6>
+                                <p>${app.candidate_name || 'Candidate'}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Status</h6>
+                                <p><span class="badge application-status-${app.status.toLowerCase()}">${app.status}</span></p>
+                            </div>
+                        </div>
+                        
+                        <div class="card mb-3">
+                            <div class="card-header">Job Details</div>
+                            <div class="card-body">
+                                <h6>Job Title</h6>
+                                <p>${app.job_title}</p>
+                                
+                                <h6>Salary</h6>
+                                <p>${app.salary || 'Not specified'}</p>
+                                
+                                <h6>Work Arrangement</h6>
+                                <p>${app.work_arrangement || 'Not specified'}</p>
+                                
+                                <h6>Benefits</h6>
+                                <ul>${benefitsList}</ul>
+                                
+                                <h6>Message</h6>
+                                <p>${app.message}</p>
+                            </div>
+                        </div>
+                        
+                        ${responseHTML}
+                    `;
+                    
+                    const modal = new bootstrap.Modal(document.getElementById('applicationDetailModal'));
+                    modal.show();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error loading application details');
+                });
+        }
+    </script>
+</body>
+</html>

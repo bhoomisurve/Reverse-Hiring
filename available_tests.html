@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Available Tests</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+</head>
+<body class="gradient-bg min-h-screen text-white">
+    <div class="container mx-auto p-6">
+        <header class="flex justify-between items-center mb-8">
+            <h1 class="text-4xl font-bold">Available Skill Tests</h1>
+            <a href="{{ url_for('dashboard') }}" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">Back to Dashboard</a>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for test in tests %}
+                <div class="bg-white bg-opacity-10 p-6 rounded-lg shadow-lg card-hover">
+                    <h2 class="text-2xl font-semibold mb-4">{{ test.name }}</h2>
+                    <p class="mb-2"><i class="fas fa-tag mr-2"></i>Category: {{ test.category }}</p>
+                    <p class="mb-2"><i class="fas fa-question-circle mr-2"></i>Questions: {{ test.questions | length }}</p>
+                    <a href="{{ url_for('take_test', test_id=test._id) }}" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">Take Test</a>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>

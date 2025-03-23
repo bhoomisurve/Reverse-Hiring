@@ -1,0 +1,688 @@
+{% extends "base.html" %}
+
+{% block title %}Candidate Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>My Profile</h5>
+                </div>
+                <div class="card-body">
+                    <h6>TechRank™: <span id="tech-rank-display">{{ current_user.data.tech_rank|default('Not yet calculated') }}</span></h6>
+                    
+                    <div class="mt-3">
+                        <h6>Skills:</h6>
+                        <div id="skills-container">
+                            {% if current_user.data.skills %}
+                                {% for skill in current_user.data.skills %}
+                                    <span class="badge bg-primary me-1">{{ skill }}</span>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted">No skills added yet</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <h6>Resume Analysis:</h6>
+                        <div id="resume-analysis-status">
+                            {% if current_user.data.resume_analysis %}
+                                <div class="text-success">Resume analyzed</div>
+                            {% else %}
+                                <div class="text-warning">Resume not uploaded</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h5>Upload Resume</h5>
+                </div>
+                <div class="card-body">
+                    <form id="resume-upload-form" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="resume-file" class="form-label">Resume (PDF or text file)</label>
+                            <input type="file" class="form-control" id="resume-file" name="resume" accept=".pdf,.txt,.docx">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Upload & Analyze</button>
+                    </form>
+                    <div id="resume-upload-status" class="mt-2"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <ul class="nav nav-tabs" id="candidateTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="applications-tab" data-bs-toggle="tab" data-bs-target="#applications" type="button" role="tab" aria-controls="applications" aria-selected="true">
+                        Company Applications
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="skill-tests-tab" data-bs-toggle="tab" data-bs-target="#skill-tests" type="button" role="tab" aria-controls="skill-tests" aria-selected="false">
+                        Skill Tests
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="resume-details-tab" data-bs-toggle="tab" data-bs-target="#resume-details" type="button" role="tab" aria-controls="resume-details" aria-selected="false">
+                        Resume Details
+                    </button>
+                </li>
+            </ul>
+            
+            <div class="tab-content p-3 border border-top-0 rounded-bottom" id="candidateTabContent">
+                <!-- Applications Tab -->
+                <div class="tab-pane fade show active" id="applications" role="tabpanel" aria-labelledby="applications-tab">
+                    <h5>Applications from Companies</h5>
+                    <div id="applications-container">
+                        <div class="d-flex justify-content-center my-5">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Skill Tests Tab -->
+                <div class="tab-pane fade" id="skill-tests" role="tabpanel" aria-labelledby="skill-tests-tab">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5>Available Skill Tests</h5>
+                        <button id="refresh-tests-btn" class="btn btn-sm btn-outline-primary">Refresh</button>
+                    </div>
+                    
+                    <div id="tests-container">
+                        <div class="d-flex justify-content-center my-5">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <h5>Completed Tests</h5>
+                    <div id="completed-tests-container">
+                        {% if current_user.data.completed_tests %}
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Test Name</th>
+                                            <th>Score</th>
+                                            <th>Completed</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for test in current_user.data.completed_tests %}
+                                        <tr>
+                                            <td>{{ test.test_name }}</td>
+                                            <td>{{ test.score }}%</td>
+                                            <td>{{ test.completed_at }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <p class="text-muted">You haven't completed any tests yet</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Resume Details Tab -->
+                <div class="tab-pane fade" id="resume-details" role="tabpanel" aria-labelledby="resume-details-tab">
+                    <h5>Resume Analysis</h5>
+                    
+                    <div id="resume-analysis-container">
+                        {% if current_user.data.resume_analysis %}
+                            <div class="card mb-3">
+                                <div class="card-header">Skills</div>
+                                <div class="card-body">
+                                    {% if current_user.data.resume_analysis.skills %}
+                                        <ul>
+                                            {% for skill in current_user.data.resume_analysis.skills %}
+                                                <li>{{ skill }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% else %}
+                                        <p class="text-muted">No skills detected</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="card mb-3">
+                                <div class="card-header">Experience</div>
+                                <div class="card-body">
+                                    {{ current_user.data.resume_analysis.experience|default('Not detected') }}
+                                </div>
+                            </div>
+                            
+                            <div class="card mb-3">
+                                <div class="card-header">Education</div>
+                                <div class="card-body">
+                                    {{ current_user.data.resume_analysis.education|default('Not detected') }}
+                                </div>
+                            </div>
+                            
+                            <div class="card mb-3">
+                                <div class="card-header">Projects</div>
+                                <div class="card-body">
+                                    {% if current_user.data.resume_analysis.projects %}
+                                        <ul>
+                                            {% for project in current_user.data.resume_analysis.projects %}
+                                                <li>{{ project }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% else %}
+                                        <p class="text-muted">No projects detected</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card mb-3">
+                                        <div class="card-header">Strengths</div>
+                                        <div class="card-body">
+                                            {% if current_user.data.resume_analysis.strengths %}
+                                                <ul>
+                                                    {% for strength in current_user.data.resume_analysis.strengths %}
+                                                        <li>{{ strength }}</li>
+                                                    {% endfor %}
+                                                </ul>
+                                            {% else %}
+                                                <p class="text-muted">No strengths highlighted</p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="card mb-3">
+                                        <div class="card-header">Areas for Improvement</div>
+                                        <div class="card-body">
+                                            {% if current_user.data.resume_analysis.weaknesses %}
+                                                <ul>
+                                                    {% for weakness in current_user.data.resume_analysis.weaknesses %}
+                                                        <li>{{ weakness }}</li>
+                                                    {% endfor %}
+                                                </ul>
+                                            {% else %}
+                                                <p class="text-muted">No areas highlighted</p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i> Upload your resume to see the analysis
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Test Taking Modal -->
+<div class="modal fade" id="testModal" tabindex="-1" aria-labelledby="testModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="testModalLabel">Take Skill Test</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="test-content">
+                <!-- Test content will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="submit-test-btn">Submit Test</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Application Response Modal -->
+<div class="modal fade" id="responseModal" tabindex="-1" aria-labelledby="responseModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="responseModalLabel">Respond to Job Offer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="response-form">
+                    <input type="hidden" id="application-id" name="application-id">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Your Response:</label>
+                        <div class="btn-group w-100 mb-3" role="group">
+                            <input type="radio" class="btn-check" name="status" id="status-accept" value="accepted" autocomplete="off">
+                            <label class="btn btn-outline-success" for="status-accept">Accept</label>
+                            
+                            <input type="radio" class="btn-check" name="status" id="status-negotiate" value="negotiating" autocomplete="off">
+                            <label class="btn btn-outline-primary" for="status-negotiate">Negotiate</label>
+                            
+                            <input type="radio" class="btn-check" name="status" id="status-reject" value="rejected" autocomplete="off">
+                            <label class="btn btn-outline-danger" for="status-reject">Decline</label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="response-message" class="form-label">Message (optional):</label>
+                        <textarea class="form-control" id="response-message" rows="3" placeholder="Enter your message to the company"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="send-response-btn">Send Response</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Load applications
+    function loadApplications() {
+        fetch('/my_applications')
+            .then(response => response.json())
+            .then(data => {
+                const container = document.getElementById('applications-container');
+                
+                // Parse the JSON string if needed
+                let applications = data;
+                if (typeof data === 'string') {
+                    applications = JSON.parse(data);
+                }
+                
+                if (applications.length === 0) {
+                    container.innerHTML = '<div class="alert alert-info">No companies have applied to you yet. Complete skill tests to increase your visibility!</div>';
+                    return;
+                }
+                
+                let html = '';
+                applications.forEach(app => {
+                    let statusBadge = '';
+                    switch(app.status) {
+                        case 'pending':
+                            statusBadge = '<span class="badge bg-warning">Pending</span>';
+                            break;
+                        case 'accepted':
+                            statusBadge = '<span class="badge bg-success">Accepted</span>';
+                            break;
+                        case 'rejected':
+                            statusBadge = '<span class="badge bg-danger">Declined</span>';
+                            break;
+                        case 'negotiating':
+                            statusBadge = '<span class="badge bg-info">Negotiating</span>';
+                            break;
+                    }
+                    
+                    html += `
+                    <div class="card mb-3">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>${app.company_name}</strong> - ${app.job_title}
+                            </div>
+                            <div>
+                                ${statusBadge}
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-2">
+                                <div class="col-md-4"><strong>Salary:</strong></div>
+                                <div class="col-md-8">${app.salary || 'Not specified'}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-md-4"><strong>Benefits:</strong></div>
+                                <div class="col-md-8">${Array.isArray(app.benefits) ? app.benefits.join(', ') : app.benefits || 'Not specified'}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-md-4"><strong>Work Arrangement:</strong></div>
+                                <div class="col-md-8">${app.work_arrangement || 'Not specified'}</div>
+                            </div>
+                            ${app.message ? `
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <strong>Message from company:</strong>
+                                    <p class="mt-1">${app.message}</p>
+                                </div>
+                            </div>` : ''}
+                            
+                            ${app.status === 'pending' ? `
+                            <div class="mt-3">
+                                <button class="btn btn-primary respond-btn" data-app-id="${app._id}">Respond</button>
+                            </div>` : ''}
+                            
+                            ${app.candidate_response ? `
+                            <div class="mt-3 p-2 bg-light rounded">
+                                <strong>Your response:</strong>
+                                <p class="mt-1">${app.candidate_response}</p>
+                            </div>` : ''}
+                        </div>
+                        <div class="card-footer text-muted">
+                            Applied on: ${new Date(app.created_at).toLocaleDateString()}
+                        </div>
+                    </div>
+                    `;
+                });
+                
+                container.innerHTML = html;
+                
+                // Add event listeners for response buttons
+                document.querySelectorAll('.respond-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const appId = this.getAttribute('data-app-id');
+                        document.getElementById('application-id').value = appId;
+                        
+                        // Clear previous selection
+                        document.querySelectorAll('[name="status"]').forEach(radio => {
+                            radio.checked = false;
+                        });
+                        document.getElementById('response-message').value = '';
+                        
+                        // Show modal
+                        new bootstrap.Modal(document.getElementById('responseModal')).show();
+                    });
+                });
+            })
+            .catch(error => {
+                console.error('Error loading applications:', error);
+                document.getElementById('applications-container').innerHTML = '<div class="alert alert-danger">Error loading applications. Please try again later.</div>';
+            });
+    }
+    
+// Load skill tests
+function loadSkillTests() {
+    fetch('/available_tests')
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById('tests-container');
+            
+            // Parse the JSON string if needed
+            let tests = data;
+            if (typeof data === 'string') {
+                tests = JSON.parse(data);
+            }
+            
+            if (tests.length === 0) {
+                container.innerHTML = '<div class="alert alert-info">No skill tests are available at the moment.</div>';
+                return;
+            }
+            
+            let html = '<div class="row">';
+            tests.forEach(test => {
+                html += `
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">${test.name}</h5>
+                        </div>
+                        <div class="card-body">
+                            <span class="badge bg-secondary mb-2">${test.category}</span>
+                            <p class="card-text">${test.description}</p>
+                            <p class="card-text"><small class="text-muted">${test.questions.length} questions</small></p>
+                        </div>
+                        <div class="card-footer">
+                            <button class="btn btn-primary take-test-btn" data-test-id="${test._id}">Take Test</button>
+                        </div>
+                    </div>
+                </div>
+                `;
+            });
+            html += '</div>';
+            
+            container.innerHTML = html;
+            
+            // Add event listeners for take test buttons
+            document.querySelectorAll('.take-test-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const testId = this.getAttribute('data-test-id');
+                    loadTest(testId);
+                });
+            });
+        })
+        .catch(error => {
+            console.error('Error loading tests:', error);
+            document.getElementById('tests-container').innerHTML = '<div class="alert alert-danger">Error loading skill tests. Please try again later.</div>';
+        });
+}
+
+// Load specific test
+function loadTest(testId) {
+    fetch(`/take_test/${testId}`)
+        .then(response => response.json())
+        .then(data => {
+            // Parse the JSON string if needed
+            let test = data;
+            if (typeof data === 'string') {
+                test = JSON.parse(data);
+            }
+            
+            const modalTitle = document.getElementById('testModalLabel');
+            const testContent = document.getElementById('test-content');
+            const submitBtn = document.getElementById('submit-test-btn');
+            
+            modalTitle.textContent = test.name;
+            
+            let html = `
+            <div class="mb-4">
+                <h6>Category: ${test.category}</h6>
+                <p>${test.description}</p>
+            </div>
+            
+            <form id="test-form" data-test-id="${test._id}">
+            `;
+            
+            test.questions.forEach((question, index) => {
+                html += `
+                <div class="card mb-3">
+                    <div class="card-header">Question ${index + 1}</div>
+                    <div class="card-body">
+                        <p>${question.text}</p>
+                        
+                        <div class="mt-3">
+                `;
+                
+                // Handle different question types
+                if (question.type === 'multiple_choice') {
+                    question.options.forEach((option, optIndex) => {
+                        html += `
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="q${index}" value="${optIndex}" id="q${index}_opt${optIndex}">
+                            <label class="form-check-label" for="q${index}_opt${optIndex}">
+                                ${option}
+                            </label>
+                        </div>
+                        `;
+                    });
+                } else if (question.type === 'code') {
+                    html += `
+                    <div class="mb-3">
+                        <label class="form-label">Your Solution:</label>
+                        <textarea class="form-control code-editor" name="q${index}" rows="8" placeholder="Write your code here..."></textarea>
+                    </div>
+                    <div class="small text-muted mb-2">Language: ${question.language || 'Python'}</div>
+                    `;
+                } else {
+                    // Default to text input
+                    html += `
+                    <div class="mb-3">
+                        <label class="form-label">Your Answer:</label>
+                        <textarea class="form-control" name="q${index}" rows="3"></textarea>
+                    </div>
+                    `;
+                }
+                
+                html += `
+                        </div>
+                    </div>
+                </div>
+                `;
+            });
+            
+            html += '</form>';
+            
+            testContent.innerHTML = html;
+            
+            // Show the modal
+            const testModal = new bootstrap.Modal(document.getElementById('testModal'));
+            testModal.show();
+            
+            // Add submit handler
+            submitBtn.onclick = function() {
+                submitTest(test._id);
+            };
+        })
+        .catch(error => {
+            console.error('Error loading test:', error);
+            alert('Error loading the test. Please try again later.');
+        });
+}
+
+// Submit test
+function submitTest(testId) {
+    const form = document.getElementById('test-form');
+    const answers = {};
+    
+    // Collect all answers
+    form.querySelectorAll('[name^="q"]').forEach(input => {
+        const questionIndex = input.name.substring(1);
+        if (input.type === 'radio') {
+            if (input.checked) {
+                answers[questionIndex] = input.value;
+            }
+        } else {
+            answers[questionIndex] = input.value;
+        }
+    });
+    
+    fetch(`/take_test/${testId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ answers: answers })
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Close the modal
+        bootstrap.Modal.getInstance(document.getElementById('testModal')).hide();
+        
+        if (data.success) {
+            alert(`Test completed! Your score: ${data.score.toFixed(1)}%`);
+            
+            // Refresh the completed tests and TechRank
+            location.reload();
+        } else {
+            alert('There was an error submitting your test. Please try again.');
+        }
+    })
+    .catch(error => {
+        console.error('Error submitting test:', error);
+        alert('Error submitting the test. Please try again later.');
+    });
+}
+   
+    // Upload resume
+    document.getElementById('resume-upload-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData();
+        const fileInput = document.getElementById('resume-file');
+        
+        if (fileInput.files.length === 0) {
+            document.getElementById('resume-upload-status').innerHTML = '<div class="alert alert-warning">Please select a file</div>';
+            return;
+        }
+        
+        formData.append('resume', fileInput.files[0]);
+        
+        // Show loading status
+        document.getElementById('resume-upload-status').innerHTML = '<div class="alert alert-info">Uploading and analyzing your resume... This may take a minute.</div>';
+        
+        fetch('/upload_resume', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('resume-upload-status').innerHTML = '<div class="alert alert-success">Resume analyzed successfully!</div>';
+                
+                // Refresh the page to show updated resume analysis
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
+            } else {
+                document.getElementById('resume-upload-status').innerHTML = `<div class="alert alert-danger">Error: ${data.error || 'Unknown error'}</div>`;
+            }
+        })
+        .catch(error => {
+            console.error('Error uploading resume:', error);
+            document.getElementById('resume-upload-status').innerHTML = '<div class="alert alert-danger">Error uploading resume. Please try again later.</div>';
+        });
+    });
+    
+    // Respond to application
+    document.getElementById('send-response-btn').addEventListener('click', function() {
+        const applicationId = document.getElementById('application-id').value;
+        const status = document.querySelector('[name="status"]:checked')?.value;
+        const message = document.getElementById('response-message').value;
+        
+        if (!status) {
+            alert('Please select your response (Accept, Negotiate, or Decline)');
+            return;
+        }
+        
+        fetch(`/respond_to_application/${applicationId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                status: status,
+                message: message
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Close the modal
+            bootstrap.Modal.getInstance(document.getElementById('responseModal')).hide();
+            
+            if (data.success) {
+                alert('Response sent successfully!');
+                
+                // Reload applications
+                loadApplications();
+            } else {
+                alert('There was an error sending your response. Please try again.');
+            }
+        })
+        .catch(error => {
+            console.error('Error sending response:', error);
+            alert('Error sending your response. Please try again later.');
+        });
+    });
+    
+    // Refresh tests button
+    document.getElementById('refresh-tests-btn').addEventListener('click', function() {
+        loadSkillTests();
+    });
+    
+    // Load initial data
+    document.addEventListener('DOMContentLoaded', function() {
+        loadApplications();
+        loadSkillTests();
+    });
+</script>
+{% endblock %}

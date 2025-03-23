@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="row align-items-center py-5">
+    <div class="col-md-6">
+        <h1 class="display-4 fw-bold">Flip the Hiring Process</h1>
+        <p class="lead">Instead of candidates applying for jobs, companies compete for top talent.</p>
+        <hr class="my-4">
+        <p>Join our platform to showcase your skills through real-world tests and let companies bid for your talent with competitive salaries, benefits, and work arrangements.</p>
+        {% if not current_user.is_authenticated %}
+            <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+                <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg px-4 me-md-2">Sign Up</a>
+                <a href="{{ url_for('login') }}" class="btn btn-outline-secondary btn-lg px-4">Login</a>
+            </div>
+        {% else %}
+            <a href="{{ url_for('dashboard') }}" class="btn btn-primary btn-lg">Go to Dashboard</a>
+        {% endif %}
+    </div>
+    <div class="col-md-6">
+        <img src="/api/placeholder/600/400" alt="Reverse Hiring Concept" class="img-fluid rounded shadow">
+    </div>
+</div>
+
+<div class="row mt-5 pt-5">
+    <div class="col-12 text-center">
+        <h2 class="mb-4">How It Works</h2>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">1. Demonstrate Your Skills</h5>
+                <p class="card-text">Take real-world skill tests in coding, marketing, design, and more to showcase your abilities.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">2. Get Your TechRank</h5>
+                <p class="card-text">Our AI analyzes your skills and assigns you a TechRank score that companies can see.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">3. Receive Company Applications</h5>
+                <p class="card-text">Companies apply to hire you, competing with offers on salary, benefits, and work arrangements.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5 pt-5">
+    <div class="col-12 text-center">
+        <h2 class="mb-4">Why Choose Us?</h2>
+    </div>
+    <div class="col-md-6">
+        <h4>For Candidates</h4>
+        <ul class="list-group mb-4">
+            <li class="list-group-item">Get hired based on skills, not just resumes</li>
+            <li class="list-group-item">Compare multiple offers simultaneously</li>
+            <li class="list-group-item">Negotiate from a position of strength</li>
+            <li class="list-group-item">Save time on job applications</li>
+        </ul>
+    </div>
+    <div class="col-md-6">
+        <h4>For Companies</h4>
+        <ul class="list-group mb-4">
+            <li class="list-group-item">Find pre-vetted candidates with proven skills</li>
+            <li class="list-group-item">Reduce time-to-hire with direct offers</li>
+            <li class="list-group-item">Access candidates who aren't actively job hunting</li>
+            <li class="list-group-item">Build a more diverse talent pipeline</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
